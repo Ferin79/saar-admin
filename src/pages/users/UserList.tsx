@@ -1,6 +1,7 @@
 import {
   Datagrid,
   DateField,
+  EditButton,
   EmailField,
   ImageField,
   List,
@@ -15,14 +16,15 @@ export const UserList = () => (
       <EmailField source="email" />
       <TextField source="firstName" />
       <TextField source="lastName" />
-      <ImageField source="photo.path" />
+      <NumberField source="role.name" />
+      <ImageField source="photo.path" label="Photo" />
       <TextField source="provider" />
       <TextField source="socialId" />
-      <NumberField source="role.name" />
       <NumberField source="status.name" />
       <DateField source="createdAt" />
       <DateField source="updatedAt" />
       <TextField source="deletedAt" />
+      <EditButton />
     </Datagrid>
   </List>
 );

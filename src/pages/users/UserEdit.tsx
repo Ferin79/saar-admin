@@ -11,10 +11,7 @@ import {
   TextInput,
   useNotify,
   useRecordContext,
-  useRedirect,
-  useUpdate,
 } from "react-admin";
-import { useParams } from "react-router-dom";
 import { uploadFile } from "../../utils/uploadFile";
 import { RoleEnum, StatusEnum } from "../../types/User";
 
@@ -26,77 +23,53 @@ const UserTitle = () => {
 
 export const UserEdit = () => {
   const notify = useNotify();
-  const redirect = useRedirect();
-  const [update] = useUpdate();
-  const { id } = useParams<{ id: string }>();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSubmit = async (values: Record<string, any>) => {
-    try {
-      // Use the ID from URL parameters rather than from form values
-      const userId = id;
+  const transform = async (data: Record<string, any>) => {
+    // Create a copy of the data
+    const transformedData = { ...data };
 
-      if (!userId) {
-        notify("Error: Missing user ID", { type: "error" });
-        return;
-      }
+    // Handle photo upload if there's a new file
+    if (data.photo && data.photo.rawFile) {
+      try {
+        const uploadedFile = await uploadFile(data.photo.rawFile, notify);
 
-      let userData = { ...values };
-
-      // If there's a new photo to upload
-      if (values.photo && values.photo.rawFile) {
-        const uploadedFile = await uploadFile(values.photo.rawFile, notify);
-
-        if (!uploadedFile || !uploadedFile.file) {
-          return; // Upload failed, stop the submission
+        if (uploadedFile && uploadedFile.file) {
+          transformedData.photo = uploadedFile.file;
+        } else {
+          notify("Failed to upload photo", { type: "error" });
+          throw new Error("Failed to upload photo");
         }
-
-        // Replace the photo field with the uploaded file info
-        userData = {
-          ...userData,
-          photo: uploadedFile.file,
-        };
+      } catch (error) {
+        notify("Error uploading file", { type: "error" });
+        throw error;
       }
-
-      // remove password if not updated
-      if (!userData.password) {
-        delete userData.password;
-      }
-
-      delete userData.email;
-
-      // Update the user with the prepared data
-      await update(
-        "users",
-        { id: userId, data: userData },
-        {
-          onSuccess: () => {
-            notify("User updated successfully", { type: "success" });
-            redirect("list", "users");
-          },
-          onError: (error: unknown) => {
-            const message =
-              error instanceof Error ? error.message : "Failed to update user";
-            console.log("error", error);
-
-            notify(message, { type: "error" });
-          },
-        },
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An error occurred";
-      notify(message, { type: "error" });
     }
+
+    // Remove password if it's empty
+    if (!transformedData.password) {
+      delete transformedData.password;
+    }
+
+    // Don't send email to API
+    delete transformedData.email;
+
+    return transformedData;
   };
 
   return (
-    <Edit title={<UserTitle />} mutationMode="pessimistic">
-      <SimpleForm onSubmit={handleSubmit}>
-        <TextInput source="id" disabled />
+    <Edit
+      title={<UserTitle />}
+      mutationMode="pessimistic"
+      redirect="list"
+      transform={transform}
+    >
+      <SimpleForm>
+        <TextInput source="id" disabled label="ID" />
         <TextInput
           type="email"
           source="email"
+          disabled
           validate={[required(), email()]}
           fullWidth
         />
@@ -126,8 +99,9 @@ export const UserEdit = () => {
           validate={required()}
           fullWidth
         />
-        <ImageInput source="photo" label="User Photo">
-          <ImageField source="path" title="title" />
+        <ImageField source="photo.path" label="Current Photo" />
+
+        <ImageInput source="photo" label="Update Photo">
           <ImageField source="src" title="title" />
         </ImageInput>
 

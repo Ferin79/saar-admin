@@ -8,65 +8,40 @@ import {
   SelectInput,
   SimpleForm,
   TextInput,
-  useCreate,
   useNotify,
-  useRedirect,
 } from "react-admin";
 import { uploadFile } from "../../utils/uploadFile";
 import { RoleEnum, StatusEnum } from "../../types/User";
 
 export const UserCreate = () => {
   const notify = useNotify();
-  const redirect = useRedirect();
-  const [create] = useCreate();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSubmit = async (values: Record<string, any>) => {
-    try {
-      let userData = { ...values };
+  const transform = async (data: Record<string, any>) => {
+    const transformedData = { ...data };
 
-      // If there's a photo to upload
-      if (values.photo && values.photo.rawFile) {
-        const uploadedFile = await uploadFile(values.photo.rawFile, notify);
+    if (data.photo && data.photo.rawFile) {
+      try {
+        const uploadedFile = await uploadFile(data.photo.rawFile, notify);
 
-        if (!uploadedFile || !uploadedFile.file) {
-          return; // Upload failed, stop the submission
+        if (uploadedFile && uploadedFile.file) {
+          transformedData.photo = uploadedFile.file;
+        } else {
+          notify("Failed to upload photo", { type: "error" });
+          throw new Error("Failed to upload photo");
         }
-
-        // Replace the photo field with the uploaded file info
-        userData = {
-          ...userData,
-          photo: uploadedFile.file,
-        };
+      } catch (error) {
+        notify("Error uploading file", { type: "error" });
+        throw error;
       }
-
-      // Create the user with the prepared data
-      await create(
-        "users",
-        { data: userData },
-        {
-          onSuccess: () => {
-            notify("User created successfully", { type: "success" });
-            redirect("list", "users");
-          },
-          onError: (error: unknown) => {
-            const message =
-              error instanceof Error ? error.message : "Failed to create user";
-            notify(message, { type: "error" });
-          },
-        },
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An error occurred";
-      notify(message, { type: "error" });
     }
+
+    return transformedData;
   };
 
   return (
-    <Create>
+    <Create mutationMode="pessimistic" redirect="list" transform={transform}>
       <SimpleForm
-        onSubmit={handleSubmit}
         defaultValues={{
           provider: "email",
           role: { id: RoleEnum.user },

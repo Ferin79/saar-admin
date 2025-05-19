@@ -3,10 +3,9 @@ import { Layout } from "./Layout";
 import { authProvider } from "./authProvider";
 import { dataProvider } from "./dataProvider";
 import { ChapterList } from "./pages/chapters/ChapterList";
-import { UserList } from "./pages/users/UserList";
-import { UserShow } from "./pages/users/UserShow";
 import { UserCreate } from "./pages/users/UserCreate";
 import { UserEdit } from "./pages/users/UserEdit";
+import { UserList } from "./pages/users/UserList";
 
 export const App = () => (
   <Admin
@@ -18,7 +17,6 @@ export const App = () => (
     <Resource
       name="users"
       list={UserList}
-      show={UserShow}
       create={UserCreate}
       edit={UserEdit}
     />
