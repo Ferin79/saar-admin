@@ -1,18 +1,15 @@
 import { AuthProvider } from "react-admin";
 import { AuthResponse } from "./types/Auth";
 import { jwtDecode } from "jwt-decode";
-import { AUTH_KEY } from "./constant";
+import { AUTH_KEY, BACKEND_URL } from "./constant";
 
 export const authProvider: AuthProvider = {
   async login({ username, password }) {
-    const request = new Request(
-      import.meta.env.VITE_BACKEND_URL + "/auth/email/login",
-      {
-        method: "POST",
-        body: JSON.stringify({ email: username, password }),
-        headers: new Headers({ "Content-Type": "application/json" }),
-      },
-    );
+    const request = new Request(BACKEND_URL + "/auth/email/login", {
+      method: "POST",
+      body: JSON.stringify({ email: username, password }),
+      headers: new Headers({ "Content-Type": "application/json" }),
+    });
 
     let response;
     try {
@@ -57,7 +54,25 @@ export const authProvider: AuthProvider = {
     }
   },
   async logout() {
-    localStorage.removeItem(AUTH_KEY);
+    const auth = JSON.parse(
+      localStorage.getItem(AUTH_KEY) || "{}",
+    ) as AuthResponse;
+    const request = new Request(BACKEND_URL + "/auth/logout", {
+      method: "POST",
+      headers: new Headers({
+        Authorization: `Bearer ${auth.token}`,
+      }),
+    });
+    try {
+      await fetch(request);
+      localStorage.removeItem(AUTH_KEY);
+    } catch (_error) {
+      if (_error instanceof Error) {
+        throw new Error(_error.message);
+      } else {
+        throw new Error("An unknown error occurred");
+      }
+    }
   },
 
   async getIdentity() {

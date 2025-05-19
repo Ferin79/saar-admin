@@ -15,25 +15,8 @@ import {
   useUpdate,
 } from "react-admin";
 import { useParams } from "react-router-dom";
-import { AUTH_KEY, BACKEND_URL } from "../../constant";
-import { AuthResponse } from "../../types/Auth";
-
-enum RoleEnum {
-  admin = 1,
-  user = 2,
-}
-
-enum StatusEnum {
-  active = 1,
-  inactive = 2,
-}
-
-type FileUploadResponse = {
-  file: {
-    id: string;
-    path: string;
-  };
-};
+import { uploadFile } from "../../utils/uploadFile";
+import { RoleEnum, StatusEnum } from "../../types/User";
 
 const UserTitle = () => {
   const record = useRecordContext();
@@ -46,46 +29,6 @@ export const UserEdit = () => {
   const redirect = useRedirect();
   const [update] = useUpdate();
   const { id } = useParams<{ id: string }>();
-
-  // Handle file upload
-  const uploadFile = async (
-    rawFile: File,
-  ): Promise<FileUploadResponse | null> => {
-    const formData = new FormData();
-    formData.append("file", rawFile);
-
-    // Get auth token
-    const authData = localStorage.getItem(AUTH_KEY);
-    if (!authData) {
-      notify("Authentication error", { type: "error" });
-      return null;
-    }
-
-    const auth = JSON.parse(authData) as AuthResponse;
-
-    try {
-      // Upload the file
-      const response = await fetch(`${BACKEND_URL}/files/upload`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-
-      // Return uploaded file data
-      return await response.json();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "File upload failed";
-      notify(message, { type: "error" });
-      return null;
-    }
-  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (values: Record<string, any>) => {
@@ -102,7 +45,7 @@ export const UserEdit = () => {
 
       // If there's a new photo to upload
       if (values.photo && values.photo.rawFile) {
-        const uploadedFile = await uploadFile(values.photo.rawFile);
+        const uploadedFile = await uploadFile(values.photo.rawFile, notify);
 
         if (!uploadedFile || !uploadedFile.file) {
           return; // Upload failed, stop the submission
