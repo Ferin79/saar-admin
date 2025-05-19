@@ -6,6 +6,7 @@ import { ChapterList } from "./pages/chapters/ChapterList";
 import { UserCreate } from "./pages/users/UserCreate";
 import { UserEdit } from "./pages/users/UserEdit";
 import { UserList } from "./pages/users/UserList";
+import { ChapterEdit } from "./pages/chapters/ChapterEdit";
 
 export const App = () => (
   <Admin
@@ -20,6 +21,6 @@ export const App = () => (
       create={UserCreate}
       edit={UserEdit}
     />
-    <Resource name="chapters" list={ChapterList} />
+    <Resource name="chapters" list={ChapterList} edit={ChapterEdit} />
   </Admin>
 );
