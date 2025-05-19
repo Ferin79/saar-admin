@@ -1,4 +1,4 @@
-import { Admin, Resource, ShowGuesser } from "react-admin";
+import { Admin, Resource } from "react-admin";
 import { Layout } from "./Layout";
 import { authProvider } from "./authProvider";
 import { dataProvider } from "./dataProvider";
@@ -22,6 +22,6 @@ export const App = () => (
       create={UserCreate}
       edit={UserEdit}
     />
-    <Resource name="chapters" list={ChapterList} show={ShowGuesser} />
+    <Resource name="chapters" list={ChapterList} />
   </Admin>
 );

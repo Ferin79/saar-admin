@@ -2,6 +2,7 @@ import {
   ArrayField,
   Datagrid,
   DateField,
+  EditButton,
   ImageField,
   List,
   NumberField,
@@ -12,7 +13,6 @@ import {
 export const ChapterList = () => (
   <List>
     <Datagrid>
-      <TextField source="id" />
       <NumberField source="number" />
       <TextField source="name" />
       <NumberField source="totalVerses" />
@@ -23,6 +23,7 @@ export const ChapterList = () => (
       </ArrayField>
       <DateField source="createdAt" />
       <DateField source="updatedAt" />
+      <EditButton />
     </Datagrid>
   </List>
 );
